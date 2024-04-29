@@ -4,7 +4,7 @@
 
 When a Linux system encounters an Out-of-Memory (OOM) situation, it becomes challenging to gather crucial information such as memory allocation mappings or network connection details of the OOM-killed process before it terminates. This information is vital for users to debug the process behavior and understand why the Linux OOM killer terminated the process.
 
-memdoor is a tool designed to provide real-time process information for OOM debugging. It offers the following features:
+`memdoor` is a tool designed to provide real-time process information for OOM debugging. It offers the following features:
 
 * Process RSS and PSS memory usage
 
@@ -14,11 +14,11 @@ memdoor is a tool designed to provide real-time process information for OOM debu
 
 * Process network connection information(IPv4 TCP + UDP)
 
-`memdoor can operate in infinite loop mode or for a specified number of loops. It starts collecting process information when the process RSS memory usage ratio reaches or exceeds a specified memory pressure threshold.
+`memdoor` can operate in infinite loop mode or for a specified number of loops. It starts collecting process information when the process RSS memory usage ratio reaches or exceeds a specified memory pressure threshold.
 
 ## Compilation
 
-To compile the memdoor binary, users can choose between two targets in the Makefile: the default target for compiling a dynamically linked binary, and the static target for compiling a statically linked binary.
+To compile the `memdoor` binary, users can choose between two targets in the Makefile: the default target for compiling a dynamically linked binary, and the static target for compiling a statically linked binary.
 
 To clean up the compiled runtime files, please use `make clean` to clean up the environment.
 
