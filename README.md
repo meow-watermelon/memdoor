@@ -155,4 +155,6 @@ ERROR: PID 8893 does not match the executable name /home/ericlee/oom
 
 ```
 [04/29/2024] 1.0.0 - initial commit
+
+[04/29/2024] 1.0.1 - fix issue#1 - low performance when dealing with a large number of network connections
 ```

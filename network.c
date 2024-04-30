@@ -114,6 +114,8 @@ void get_tcp_connection_stats(long int input_socket_inode) {
             /* print network connection stats */
             fprintf(stdout, "TCP  %-13s%s:%d  %s:%d  %ld  %ld\n", tcp_state[socket_state], local_address_string, local_port, remote_address_string, remote_port, tx_queue, rx_queue);
             fflush(stdout);
+
+            break;
         }
     }
 
@@ -213,6 +215,8 @@ void get_udp_connection_stats(long int input_socket_inode) {
             /* print network connection stats */
             fprintf(stdout, "UDP  %-13s%s:%d  %s:%d  %ld  %ld\n", tcp_state[socket_state], local_address_string, local_port, remote_address_string, remote_port, tx_queue, rx_queue);
             fflush(stdout);
+
+            break;
         }
     }
 
