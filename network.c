@@ -23,25 +23,14 @@ static char *tcp_state[] =
 };
 
 void free_netstat(struct netstat *input_netstat) {
-    struct netstat *head = NULL;
-    struct netstat *next = NULL;
+    struct netstat *current = input_netstat;
+    struct netstat *next;
 
-    if (input_netstat == NULL) {
-        return;
-    }
-
-    head = input_netstat;
-    next = input_netstat;
-
-    while (next != NULL) {
-        free(head);
-        head = NULL;
-
-        next = next->next_ptr;
-        /* next points to the next pointer,  */
-        if (next != NULL) {
-            head = next;
-        }
+    while (current != NULL) {
+        next = current->next_ptr;
+        free(current);
+        current = NULL;
+        current = next;
     }
 }
 
