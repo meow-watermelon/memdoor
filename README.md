@@ -48,111 +48,71 @@ usage: memdoor -p|--pid <target process id>
 
 ## Example
 
-In this example, the program `oom` will keep allocating 1 MB memory in each iteration in an infinite loop and never free the memory region. The process ID is `8893`, the executable file full path is `/home/ericlee/oom`, the specified time period between each run is `1` second and the data collection is triggered when the process RSS memory usage is equal to or over `50%`. Because the program `oom` does not utilize any network resources so there's no network connection details.
+In this example, the program `oom` will keep allocating 1 MB memory in each iteration in an infinite loop and never free the memory region. The process ID is `18584`, the executable file full path is `/home/ericlee/oom`, the specified time period between each run is `1` second and the data collection is triggered when the process RSS memory usage is equal to or over `50%`. Because the program `oom` does not utilize any network resources so there's no network connection details.
 
-At `Sun Apr 28 22:44:37 2024`, the process `8893` has been killed so the sanity check for process ID and executable file full path is failed then `memdoor` exited.
+At `Sun May  5 15:52:02 2024`, the process `18584` has been killed so the sanity check for process ID and executable file full path is failed then `memdoor` exited.
 
 ```
-$ ./memdoor --pid 8893 --exename /home/ericlee/oom --interval 1 --memory-pressure-threshold 50
-Report Time: Sun Apr 28 22:44:24 2024
+$ ./memdoor --pid 18584 --exename /home/ericlee/oom --interval 1 --memory-pressure-threshold 50
+Report Time: Sun May  5 15:51:02 2024
 ##### PROCESS BASIC INFORMATION #####
-PID: 8893
+PID: 18584
 Executable Absolute Path: /home/ericlee/oom
 
 Process memory usage is not equal to or greater than input memory pressure threshold
 
 <... skip ...>
 
-Report Time: Sun Apr 28 22:44:33 2024
+Report Time: Sun May  5 15:52:02 2024
 ##### PROCESS BASIC INFORMATION #####
-PID: 8893
+PID: 18584
 Executable Absolute Path: /home/ericlee/oom
 
 ##### PROCESS MEMORY INFORMATION #####
 Total System Memory: 6790004 kB
-Process RSS Memory Usage: 3615104 kB
-Process PSS Memory Usage: 3615100 kB
-Process OOM Score: 1238
+Process RSS Memory Usage: 3937320 kB
+Process PSS Memory Usage: 3937316 kB
+Process OOM Score: 1285
 Process OOM Score Adjustment Value: 0
 
 ##### PROCESS MEMORY MAPPING INFORMATION #####
-START ADDRESS     SIZE                PERM  DEV    INODE      FILE PATH
-000055e87e594000  4               kB  r--p  00:2e  330129     /home/ericlee/oom
-000055e87e595000  4               kB  r-xp  00:2e  330129     /home/ericlee/oom
-000055e87e596000  4               kB  r--p  00:2e  330129     /home/ericlee/oom
-000055e87e597000  4               kB  r--p  00:2e  330129     /home/ericlee/oom
-000055e87e598000  4               kB  rw-p  00:2e  330129     /home/ericlee/oom
-000055e87fb51000  926224312       kB  rw-p  00:00  0          [heap]
-00007fda8ec5b000  67371008        kB  rw-p  00:00  0          
-00007fea9ec5b000  136             kB  r--p  00:2e  318324     /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007fea9ec7d000  1380            kB  r-xp  00:2e  318324     /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007fea9edd6000  316             kB  r--p  00:2e  318324     /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007fea9ee25000  16              kB  r--p  00:2e  318324     /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007fea9ee29000  8               kB  rw-p  00:2e  318324     /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007fea9ee2b000  24              kB  rw-p  00:00  0          
-00007fea9ee3b000  4               kB  r--p  00:2e  318320     /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007fea9ee3c000  128             kB  r-xp  00:2e  318320     /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007fea9ee5c000  32              kB  r--p  00:2e  318320     /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007fea9ee65000  4               kB  r--p  00:2e  318320     /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007fea9ee66000  4               kB  rw-p  00:2e  318320     /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007fea9ee67000  4               kB  rw-p  00:00  0          
-00007fffdd66b000  132             kB  rw-p  00:00  0          [stack]
-00007fffdd783000  16              kB  r--p  00:00  0          [vvar]
-00007fffdd787000  8               kB  r-xp  00:00  0          [vdso]
-ffffffffff600000  4               kB  --xp  00:00  0          [vsyscall]
+START ADDRESS     SIZE                PERM  DEV    INODE        FILE PATH
+000055f7952d6000  4               kB  r--p  00:2e  330129       /home/ericlee/oom
+000055f7952d7000  4               kB  r-xp  00:2e  330129       /home/ericlee/oom
+000055f7952d8000  4               kB  r--p  00:2e  330129       /home/ericlee/oom
+000055f7952d9000  4               kB  r--p  00:2e  330129       /home/ericlee/oom
+000055f7952da000  4               kB  rw-p  00:2e  330129       /home/ericlee/oom
+000055f795a28000  1008056472      kB  rw-p  00:00  0            [heap]
+00007f80937c5000  67371008        kB  rw-p  00:00  0            
+00007f90a37c5000  136             kB  r--p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+00007f90a37e7000  1380            kB  r-xp  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+00007f90a3940000  316             kB  r--p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+00007f90a398f000  16              kB  r--p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+00007f90a3993000  8               kB  rw-p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+00007f90a3995000  24              kB  rw-p  00:00  0            
+00007f90a39a5000  4               kB  r--p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+00007f90a39a6000  128             kB  r-xp  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+00007f90a39c6000  32              kB  r--p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+00007f90a39cf000  4               kB  r--p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+00007f90a39d0000  4               kB  rw-p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+00007f90a39d1000  4               kB  rw-p  00:00  0            
+00007ffffc39d000  132             kB  rw-p  00:00  0            [stack]
+00007ffffc3ed000  16              kB  r--p  00:00  0            [vvar]
+00007ffffc3f1000  8               kB  r-xp  00:00  0            [vdso]
+ffffffffff600000  4               kB  --xp  00:00  0            [vsyscall]
 
 ##### PROCESS NETWORK CONNECTION INFORMATION #####
-PROT STATE        LOCAL ADDRESS         REMOTE ADDRESS        TX QUEUE    RX QUEUE    
+PROT  STATE        L.ADDR            L.PORT  R.ADDR            R.PORT  TX QUEUE  RX QUEUE  
 
 
-Report Time: Sun Apr 28 22:44:35 2024
-##### PROCESS BASIC INFORMATION #####
-PID: 8893
-Executable Absolute Path: /home/ericlee/oom
-
-##### PROCESS MEMORY INFORMATION #####
-Total System Memory: 6790004 kB
-Process RSS Memory Usage: 3942664 kB
-Process PSS Memory Usage: 3942660 kB
-Process OOM Score: 1286
-Process OOM Score Adjustment Value: 0
-
-##### PROCESS MEMORY MAPPING INFORMATION #####
-START ADDRESS     SIZE                PERM  DEV    INODE      FILE PATH
-000055e87e594000  4               kB  r--p  00:2e  330129     /home/ericlee/oom
-000055e87e595000  4               kB  r-xp  00:2e  330129     /home/ericlee/oom
-000055e87e596000  4               kB  r--p  00:2e  330129     /home/ericlee/oom
-000055e87e597000  4               kB  r--p  00:2e  330129     /home/ericlee/oom
-000055e87e598000  4               kB  rw-p  00:2e  330129     /home/ericlee/oom
-000055e87fb51000  1009338540      kB  rw-p  00:00  0          [heap]
-00007fda8ec5b000  67371008        kB  rw-p  00:00  0          
-00007fea9ec5b000  136             kB  r--p  00:2e  318324     /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007fea9ec7d000  1380            kB  r-xp  00:2e  318324     /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007fea9edd6000  316             kB  r--p  00:2e  318324     /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007fea9ee25000  16              kB  r--p  00:2e  318324     /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007fea9ee29000  8               kB  rw-p  00:2e  318324     /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007fea9ee2b000  24              kB  rw-p  00:00  0          
-00007fea9ee3b000  4               kB  r--p  00:2e  318320     /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007fea9ee3c000  128             kB  r-xp  00:2e  318320     /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007fea9ee5c000  32              kB  r--p  00:2e  318320     /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007fea9ee65000  4               kB  r--p  00:2e  318320     /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007fea9ee66000  4               kB  rw-p  00:2e  318320     /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007fea9ee67000  4               kB  rw-p  00:00  0          
-00007fffdd66b000  132             kB  rw-p  00:00  0          [stack]
-00007fffdd783000  16              kB  r--p  00:00  0          [vvar]
-00007fffdd787000  8               kB  r-xp  00:00  0          [vdso]
-ffffffffff600000  4               kB  --xp  00:00  0          [vsyscall]
-
-##### PROCESS NETWORK CONNECTION INFORMATION #####
-PROT STATE        LOCAL ADDRESS         REMOTE ADDRESS        TX QUEUE    RX QUEUE    
-
-
-Report Time: Sun Apr 28 22:44:37 2024
-ERROR: PID 8893 does not match the executable name /home/ericlee/oom
+Report Time: Sun May  5 15:52:04 2024
+ERROR: PID 18584 is not accessible: No such process
 ```
 
 ## ChangeLog
 
 ```
 [04/29/2024] 1.0.0 - initial commit
+
+[05/05/2024] 1.0.1 - fix issue#1 - low performance when dealing with a large number of network connections
 ```

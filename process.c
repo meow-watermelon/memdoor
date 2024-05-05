@@ -264,7 +264,7 @@ void get_memory_mapping(pid_t pid) {
     }
 
     /* print header */
-    fprintf(stdout, "%-16s  %-15s     %-5s %-6s %-10s %s\n", "START ADDRESS", "SIZE", "PERM", "DEV", "INODE", "FILE PATH");
+    fprintf(stdout, "%-16s  %-15s     %-5s %-6s %-12s %s\n", "START ADDRESS", "SIZE", "PERM", "DEV", "INODE", "FILE PATH");
     fflush(stdout);
 
     while (fgets(line, sizeof(line), process_memory_mapping_file) != NULL) {
@@ -281,7 +281,7 @@ void get_memory_mapping(pid_t pid) {
         size = end_address - start_address;
 
         /* print memory mappings */
-        fprintf(stdout, "%016lx  %-15ld kB  %-5s %-6s %-10ld %s\n", start_address, size / 1024, permission_bits, dev, file_inode, file_pathname);
+        fprintf(stdout, "%016lx  %-15ld kB  %-5s %-6s %-12ld %s\n", start_address, size / 1024, permission_bits, dev, file_inode, file_pathname);
         fflush(stdout);
     }
 
@@ -314,8 +314,21 @@ void get_network_connection(pid_t pid) {
         return;
     }
 
+    /* load tcp and udp netstat data */
+    struct netstat *tcp_netstat = load_netstat("tcp");
+    if (tcp_netstat == NULL) {
+        fprintf(stderr, "ERROR: failed to load TCP network connections stats\n");
+        return;
+    }
+
+    struct netstat *udp_netstat = load_netstat("udp");
+    if (udp_netstat == NULL) {
+        fprintf(stderr, "ERROR: failed to load UDP network connections stats\n");
+        return;
+    }
+
     /* print header */
-    fprintf(stdout, "%-5s%-13s%-22s%-22s%-12s%-12s\n", "PROT", "STATE", "LOCAL ADDRESS", "REMOTE ADDRESS", "TX QUEUE", "RX QUEUE");
+    fprintf(stdout, "%-6s%-13s%-18s%-8s%-18s%-8s%-10s%-10s\n", "PROT", "STATE", "L.ADDR", "L.PORT", "R.ADDR", "R.PORT", "TX QUEUE", "RX QUEUE");
     fflush(stdout);
 
     while ((entry = readdir(process_fd_dir)) != NULL) {
@@ -348,12 +361,16 @@ void get_network_connection(pid_t pid) {
         /* we only process network connection details if socket_inode > 0 */
         if (socket_inode > 0) {
             /* process IPv4 TCP connection information */
-            get_tcp_connection_stats(socket_inode);
+            get_connection_stats(socket_inode, tcp_netstat);
 
             /* process IPv4 UDP connection information */
-            get_udp_connection_stats(socket_inode);
+            get_connection_stats(socket_inode, udp_netstat);
         }
     }
+
+    /* free linked list */
+    free_netstat(tcp_netstat);
+    free_netstat(udp_netstat);
 
     closedir(process_fd_dir);
 }
