@@ -314,6 +314,10 @@ void get_network_connection(pid_t pid) {
         return;
     }
 
+    /* load tcp and udp netstat data */
+    struct netstat *tcp_netstat = load_netstat("tcp");
+    struct netstat *udp_netstat = load_netstat("udp");
+
     /* print header */
     fprintf(stdout, "%-5s%-13s%-22s%-22s%-12s%-12s\n", "PROT", "STATE", "LOCAL ADDRESS", "REMOTE ADDRESS", "TX QUEUE", "RX QUEUE");
     fflush(stdout);
@@ -348,10 +352,10 @@ void get_network_connection(pid_t pid) {
         /* we only process network connection details if socket_inode > 0 */
         if (socket_inode > 0) {
             /* process IPv4 TCP connection information */
-            get_tcp_connection_stats(socket_inode);
+            get_connection_stats(socket_inode, tcp_netstat);
 
             /* process IPv4 UDP connection information */
-            get_udp_connection_stats(socket_inode);
+            get_connection_stats(socket_inode, udp_netstat);
         }
     }
 
