@@ -264,7 +264,7 @@ void get_memory_mapping(pid_t pid) {
     }
 
     /* print header */
-    fprintf(stdout, "%-16s  %-15s     %-5s %-6s %-10s %s\n", "START ADDRESS", "SIZE", "PERM", "DEV", "INODE", "FILE PATH");
+    fprintf(stdout, "%-16s  %-15s     %-5s %-6s %-12s %s\n", "START ADDRESS", "SIZE", "PERM", "DEV", "INODE", "FILE PATH");
     fflush(stdout);
 
     while (fgets(line, sizeof(line), process_memory_mapping_file) != NULL) {
@@ -281,7 +281,7 @@ void get_memory_mapping(pid_t pid) {
         size = end_address - start_address;
 
         /* print memory mappings */
-        fprintf(stdout, "%016lx  %-15ld kB  %-5s %-6s %-10ld %s\n", start_address, size / 1024, permission_bits, dev, file_inode, file_pathname);
+        fprintf(stdout, "%016lx  %-15ld kB  %-5s %-6s %-12ld %s\n", start_address, size / 1024, permission_bits, dev, file_inode, file_pathname);
         fflush(stdout);
     }
 
@@ -328,7 +328,7 @@ void get_network_connection(pid_t pid) {
     }
 
     /* print header */
-    fprintf(stdout, "%-6s%-13s%-18s%-8s%-18s%-8s%-10s%-10s\n", "PROT", "STATE", "LOCAL ADDRESS", "LOCAL PORT", "REMOTE ADDRESS", "REMOTE PORT", "TX QUEUE", "RX QUEUE");
+    fprintf(stdout, "%-6s%-13s%-18s%-8s%-18s%-8s%-10s%-10s\n", "PROT", "STATE", "L.ADDR", "L.PORT", "R.ADDR", "R.PORT", "TX QUEUE", "RX QUEUE");
     fflush(stdout);
 
     while ((entry = readdir(process_fd_dir)) != NULL) {
