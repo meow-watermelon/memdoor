@@ -114,5 +114,5 @@ ERROR: PID 18584 is not accessible: No such process
 ```
 [04/29/2024] 1.0.0 - initial commit
 
-[04/29/2024] 1.0.1 - fix issue#1 - low performance when dealing with a large number of network connections
+[05/05/2024] 1.0.1 - fix issue#1 - low performance when dealing with a large number of network connections
 ```
