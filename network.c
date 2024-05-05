@@ -22,6 +22,29 @@ static char *tcp_state[] =
     "CLOSING"
 };
 
+void free_netstat(struct netstat *input_netstat) {
+    struct netstat *head = NULL;
+    struct netstat *next = NULL;
+
+    if (input_netstat == NULL) {
+        return;
+    }
+
+    head = input_netstat;
+    next = input_netstat;
+
+    while (next != NULL) {
+        free(head);
+        head = NULL;
+
+        next = next->next_ptr;
+        /* next points to the next pointer,  */
+        if (next != NULL) {
+            head = next;
+        }
+    }
+}
+
 struct netstat *load_netstat(char *protocol) {
     char proc_ipv4_netstat_filename[PATH_MAX];
 
@@ -168,10 +191,10 @@ void get_connection_stats(long int input_socket_inode, struct netstat *input_net
 
     head = input_netstat;
 
-    while (head->next_ptr != NULL) {
+    while (head != NULL) {
         if (head->socket_inode == input_socket_inode) {
             /* print network connection stats */
-            fprintf(stdout, "%-6s%-13s%s:%d  %s:%d  %ld  %ld\n", head->protocol, tcp_state[head->socket_state], head->local_address, head->local_port, head->remote_address, head->remote_port, head->tx_queue, head->rx_queue);
+            fprintf(stdout, "%-6s%-13s%-18s%-8d%-18s%-8d%-10ld%-10ld\n", head->protocol, tcp_state[head->socket_state], head->local_address, head->local_port, head->remote_address, head->remote_port, head->tx_queue, head->rx_queue);
             fflush(stdout);
         }
 

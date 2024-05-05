@@ -316,10 +316,19 @@ void get_network_connection(pid_t pid) {
 
     /* load tcp and udp netstat data */
     struct netstat *tcp_netstat = load_netstat("tcp");
+    if (tcp_netstat == NULL) {
+        fprintf(stderr, "ERROR: failed to load TCP network connections stats\n");
+        return;
+    }
+
     struct netstat *udp_netstat = load_netstat("udp");
+    if (udp_netstat == NULL) {
+        fprintf(stderr, "ERROR: failed to load UDP network connections stats\n");
+        return;
+    }
 
     /* print header */
-    fprintf(stdout, "%-5s%-13s%-22s%-22s%-12s%-12s\n", "PROT", "STATE", "LOCAL ADDRESS", "REMOTE ADDRESS", "TX QUEUE", "RX QUEUE");
+    fprintf(stdout, "%-6s%-13s%-18s%-8s%-18s%-8s%-10s%-10s\n", "PROT", "STATE", "LOCAL ADDRESS", "LOCAL PORT", "REMOTE ADDRESS", "REMOTE PORT", "TX QUEUE", "RX QUEUE");
     fflush(stdout);
 
     while ((entry = readdir(process_fd_dir)) != NULL) {
@@ -358,6 +367,10 @@ void get_network_connection(pid_t pid) {
             get_connection_stats(socket_inode, udp_netstat);
         }
     }
+
+    /* free linked list */
+    free_netstat(tcp_netstat);
+    free_netstat(udp_netstat);
 
     closedir(process_fd_dir);
 }
