@@ -35,27 +35,31 @@ void free_netstat(struct netstat *input_netstat) {
 }
 
 struct netstat *load_netstat(char *protocol) {
-    char proc_ipv4_netstat_filename[PATH_MAX];
+    char proc_netstat_filename[PATH_MAX];
 
     /* specify the network stat filename based on the protocol type */
     if (strcmp(protocol, "tcp") == 0) {
-        strcpy(proc_ipv4_netstat_filename, "/proc/net/tcp");
+        strcpy(proc_netstat_filename, "/proc/net/tcp");
     } else if (strcmp(protocol, "udp") == 0) {
-        strcpy(proc_ipv4_netstat_filename, "/proc/net/udp");
+        strcpy(proc_netstat_filename, "/proc/net/udp");
+    } else if (strcmp(protocol, "tcp6") == 0) {
+        strcpy(proc_netstat_filename, "/proc/net/tcp6");
+    } else if (strcmp(protocol, "udp6") == 0) {
+        strcpy(proc_netstat_filename, "/proc/net/udp6");
     } else {
-        fprintf(stderr, "ERROR: please pass correct protocol string: [tcp, udp]\n");
+        fprintf(stderr, "ERROR: please pass correct protocol string: [tcp, tcp6, udp, udp6]\n");
         return NULL;
     }
 
-    FILE *proc_ipv4_netstat_file;
-    proc_ipv4_netstat_file = NULL;
+    FILE *proc_netstat_file;
+    proc_netstat_file = NULL;
 
     char line[BUFSIZ];
 
-    /* define reading format of /proc/net/{tcp,udp} file */
+    /* define reading format of /proc/net/{tcp,udp,tcp6,udp6} file */
     char *format = "%d: %64[0-9A-Fa-f]:%X %64[0-9A-Fa-f]:%X %X %lX:%lX %X:%lX %lX %d %d %ld %*s";
 
-    /* define field variables of /proc/net/{tcp,udp} file
+    /* define field variables of /proc/net/{tcp,tcp6,udp,udp6} file
      *
      * 1st: index (d)
      * 2nd: local address (64[0-9A-Fa-f])
@@ -89,16 +93,19 @@ struct netstat *load_netstat(char *protocol) {
 
     /* define address strings */
     struct in_addr ip_address;
+    struct in6_addr ipv6_address;
     char local_address_string[INET_ADDRSTRLEN];
     char remote_address_string[INET_ADDRSTRLEN];
+    char ipv6_local_address_string[INET6_ADDRSTRLEN];
+    char ipv6_remote_address_string[INET6_ADDRSTRLEN];
     uint32_t local_address_hex;
     uint32_t remote_address_hex;
 
     int ret_sscanf;
 
-    proc_ipv4_netstat_file = fopen(proc_ipv4_netstat_filename, "r");
-    if (proc_ipv4_netstat_file == NULL) {
-        fprintf(stderr, "ERROR: failed to open IPv4 %s stats file %s: %s\n", protocol, proc_ipv4_netstat_filename, strerror(errno));
+    proc_netstat_file = fopen(proc_netstat_filename, "r");
+    if (proc_netstat_file == NULL) {
+        fprintf(stderr, "ERROR: failed to open %s stats file %s: %s\n", protocol, proc_netstat_filename, strerror(errno));
         return NULL;
     }
 
@@ -106,7 +113,7 @@ struct netstat *load_netstat(char *protocol) {
     struct netstat *head = NULL;
     struct netstat *next = NULL;
 
-    while (fgets(line, sizeof(line), proc_ipv4_netstat_file) != NULL) {
+    while (fgets(line, sizeof(line), proc_netstat_file) != NULL) {
         /* read fields from each stat line */
         ret_sscanf = sscanf(line, format, &index, local_address, &local_port, remote_address, &remote_port, &socket_state, &tx_queue, &rx_queue, &timer_active, &time_length, &retry, &uid, &timeout, &socket_inode);
 
@@ -114,28 +121,54 @@ struct netstat *load_netstat(char *protocol) {
             continue;
         }
 
-        /* process local address and port*/
-        ret_sscanf = sscanf(local_address, "%X", &local_address_hex);
-        if (ret_sscanf < 1 || ret_sscanf == EOF) {
-            continue;
+        /* IPv4 connections */
+        if (strcmp(protocol, "tcp") == 0 || strcmp(protocol, "udp") == 0) {
+            /* process local address and port*/
+            ret_sscanf = sscanf(local_address, "%X", &local_address_hex);
+            if (ret_sscanf < 1 || ret_sscanf == EOF) {
+                continue;
+            }
+
+            ip_address.s_addr = local_address_hex;
+
+            if (inet_ntop(AF_INET, &ip_address, local_address_string, INET_ADDRSTRLEN) == NULL) {
+                continue;
+            }
+
+            /* process remote address and port*/
+            ret_sscanf = sscanf(remote_address, "%X", &remote_address_hex);
+            if (ret_sscanf < 1 || ret_sscanf == EOF) {
+                continue;
+            }
+
+            ip_address.s_addr = remote_address_hex;
+
+            if (inet_ntop(AF_INET, &ip_address, remote_address_string, INET_ADDRSTRLEN) == NULL) {
+                continue;
+            }
         }
 
-        ip_address.s_addr = local_address_hex;
+        /* IPv6 connections */
+        if (strcmp(protocol, "tcp6") == 0 || strcmp(protocol, "udp6") == 0) {
+            /* process local address and port*/
+            ret_sscanf = sscanf(local_address, "%08X%08X%08X%08X", &ipv6_address.s6_addr32[0], &ipv6_address.s6_addr32[1], &ipv6_address.s6_addr32[2], &ipv6_address.s6_addr32[3]);
+            if (ret_sscanf < 4 || ret_sscanf == EOF) {
+                continue;
+            }
 
-        if (inet_ntop(AF_INET, &ip_address, local_address_string, INET_ADDRSTRLEN) == NULL) {
-            continue;
-        }
+            if (inet_ntop(AF_INET6, &ipv6_address, ipv6_local_address_string, INET6_ADDRSTRLEN) == NULL) {
+                continue;
+            }
 
-        /* process remote address and port*/
-        ret_sscanf = sscanf(remote_address, "%X", &remote_address_hex);
-        if (ret_sscanf < 1 || ret_sscanf == EOF) {
-            continue;
-        }
+            /* process remote address and port*/
+            ret_sscanf = sscanf(remote_address, "%08X%08X%08X%08X", &ipv6_address.s6_addr32[0], &ipv6_address.s6_addr32[1], &ipv6_address.s6_addr32[2], &ipv6_address.s6_addr32[3]);
+            if (ret_sscanf < 4 || ret_sscanf == EOF) {
+                continue;
+            }
 
-        ip_address.s_addr = remote_address_hex;
-
-        if (inet_ntop(AF_INET, &ip_address, remote_address_string, INET_ADDRSTRLEN) == NULL) {
-            continue;
+            if (inet_ntop(AF_INET6, &ipv6_address, ipv6_remote_address_string, INET6_ADDRSTRLEN) == NULL) {
+                continue;
+            }
         }
 
         /* create netstat struct */
@@ -149,9 +182,23 @@ struct netstat *load_netstat(char *protocol) {
         strcpy(node->protocol, protocol);
         node->socket_state = socket_state;
         node->socket_inode = socket_inode;
-        strcpy(node->local_address, local_address_string);
+
+        if (strcmp(protocol, "tcp") == 0 || strcmp(protocol, "udp") == 0) {
+            strcpy(node->local_address, local_address_string);
+        }
+        if (strcmp(protocol, "tcp6") == 0 || strcmp(protocol, "udp6") == 0) {
+            strcpy(node->local_address, ipv6_local_address_string);
+        }
+
         node->local_port = local_port;
-        strcpy(node->remote_address, remote_address_string);
+
+        if (strcmp(protocol, "tcp") == 0 || strcmp(protocol, "udp") == 0) {
+            strcpy(node->remote_address, remote_address_string);
+        }
+        if (strcmp(protocol, "tcp6") == 0 || strcmp(protocol, "udp6") == 0) {
+            strcpy(node->remote_address, ipv6_remote_address_string);
+        }
+
         node->remote_port = remote_port;
         node->tx_queue = tx_queue;
         node->rx_queue = rx_queue;
@@ -166,7 +213,7 @@ struct netstat *load_netstat(char *protocol) {
         }
     }
 
-    fclose(proc_ipv4_netstat_file);
+    fclose(proc_netstat_file);
 
     return head;
 }
@@ -183,7 +230,7 @@ void get_connection_stats(long int input_socket_inode, struct netstat *input_net
     while (head != NULL) {
         if (head->socket_inode == input_socket_inode) {
             /* print network connection stats */
-            fprintf(stdout, "%-6s%-13s%-18s%-8d%-18s%-8d%-10ld%-10ld\n", head->protocol, tcp_state[head->socket_state], head->local_address, head->local_port, head->remote_address, head->remote_port, head->tx_queue, head->rx_queue);
+            fprintf(stdout, "%-6s%-13s%-45s%-8d%-45s%-8d%-10ld%-10ld\n", head->protocol, tcp_state[head->socket_state], head->local_address, head->local_port, head->remote_address, head->remote_port, head->tx_queue, head->rx_queue);
             fflush(stdout);
         }
 

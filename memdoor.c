@@ -8,7 +8,7 @@
 #include "process.h"
 #include "utils.h"
 
-#define VERSION "1.0.1"
+#define VERSION "1.1.0"
 #define PROCESS_BASIC_INFO_BANNER "##### PROCESS BASIC INFORMATION #####"
 #define PROCESS_MEMORY_INFO_BANNER "##### PROCESS MEMORY INFORMATION #####"
 #define PROCESS_MEMORY_MAPPING_INFO_BANNER "##### PROCESS MEMORY MAPPING INFORMATION #####"
