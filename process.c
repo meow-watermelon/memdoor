@@ -317,18 +317,28 @@ void get_network_connection(pid_t pid) {
     /* load tcp and udp netstat data */
     struct netstat *tcp_netstat = load_netstat("tcp");
     if (tcp_netstat == NULL) {
-        fprintf(stderr, "ERROR: failed to load TCP network connections stats\n");
+        fprintf(stderr, "ERROR: failed to load IPv4 TCP network connections stats\n");
         return;
     }
 
     struct netstat *udp_netstat = load_netstat("udp");
     if (udp_netstat == NULL) {
-        fprintf(stderr, "ERROR: failed to load UDP network connections stats\n");
+        fprintf(stderr, "ERROR: failed to load IPv4 UDP network connections stats\n");
         return;
     }
 
+    struct netstat *tcp6_netstat = load_netstat("tcp6");
+    if (tcp6_netstat == NULL) {
+        fprintf(stderr, "WARNING: failed to load IPv6 TCP network connections stats\n");
+    }
+
+    struct netstat *udp6_netstat = load_netstat("udp6");
+    if (udp6_netstat == NULL) {
+        fprintf(stderr, "WRANING: failed to load IPv6 UDP network connections stats\n");
+    }
+
     /* print header */
-    fprintf(stdout, "%-6s%-13s%-18s%-8s%-18s%-8s%-10s%-10s\n", "PROT", "STATE", "L.ADDR", "L.PORT", "R.ADDR", "R.PORT", "TX QUEUE", "RX QUEUE");
+    fprintf(stdout, "%-6s%-13s%-45s%-8s%-45s%-8s%-10s%-10s\n", "PROT", "STATE", "L.ADDR", "L.PORT", "R.ADDR", "R.PORT", "TX QUEUE", "RX QUEUE");
     fflush(stdout);
 
     while ((entry = readdir(process_fd_dir)) != NULL) {
@@ -365,12 +375,23 @@ void get_network_connection(pid_t pid) {
 
             /* process IPv4 UDP connection information */
             get_connection_stats(socket_inode, udp_netstat);
+
+            /* we only process IPv6 connection information if IPv6 is enabled */
+            if (tcp6_netstat != NULL) {
+                get_connection_stats(socket_inode, tcp6_netstat);
+            }
+
+            if (udp6_netstat != NULL) {
+                get_connection_stats(socket_inode, udp6_netstat);
+            }
         }
     }
 
     /* free linked list */
     free_netstat(tcp_netstat);
     free_netstat(udp_netstat);
+    free_netstat(tcp6_netstat);
+    free_netstat(udp6_netstat);
 
     closedir(process_fd_dir);
 }

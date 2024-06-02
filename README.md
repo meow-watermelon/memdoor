@@ -12,7 +12,7 @@ When a Linux system encounters an Out-of-Memory (OOM) situation, it becomes chal
 
 * Process memory mappings
 
-* Process network connection information(IPv4 TCP + UDP)
+* Process network connection information(IPv4 and IPv6 TCP + UDP)
 
 `memdoor` can operate in infinite loop mode or for a specified number of loops. It starts collecting process information when the process RSS memory usage ratio reaches or exceeds a specified memory pressure threshold.
 
@@ -26,7 +26,7 @@ To clean up the compiled runtime files, please use `make clean` to clean up the 
 
 ```
 $ ./memdoor 
-memdoor version 1.0.0
+memdoor version 1.1.0
 usage: memdoor -p|--pid <target process id>
                -e|--exename <full path of target process>
                -m|--memory-pressure-threshold <percentage integer>
@@ -102,7 +102,7 @@ START ADDRESS     SIZE                PERM  DEV    INODE        FILE PATH
 ffffffffff600000  4               kB  --xp  00:00  0            [vsyscall]
 
 ##### PROCESS NETWORK CONNECTION INFORMATION #####
-PROT  STATE        L.ADDR            L.PORT  R.ADDR            R.PORT  TX QUEUE  RX QUEUE  
+PROT  STATE        L.ADDR                                       L.PORT  R.ADDR                                       R.PORT  TX QUEUE  RX QUEUE  
 
 
 Report Time: Sun May  5 15:52:04 2024
@@ -114,5 +114,7 @@ ERROR: PID 18584 is not accessible: No such process
 ```
 [04/29/2024] 1.0.0 - initial commit
 
-[05/05/2024] 1.0.1 - fix issue#1 - low performance when dealing with a large number of network connections
+[05/05/2024] 1.0.1 - bug issue#1 - low performance when dealing with a large number of network connections
+
+[06/01/2024] 1.1.0 - fearure issue#4 - add ipv6 connection information
 ```
