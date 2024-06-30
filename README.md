@@ -26,11 +26,11 @@ To clean up the compiled runtime files, please use `make clean` to clean up the 
 
 ```
 $ ./memdoor 
-memdoor version 1.1.0
+memdoor version 1.2.0
 usage: memdoor -p|--pid <target process id>
                -e|--exename <full path of target process>
-               -m|--memory-pressure-threshold <percentage integer>
                -i|--interval <second(s)>
+               [-m|--memory-pressure-threshold <percentage integer>]
                [-c|--count <count(s)>]
 ```
 
@@ -38,9 +38,9 @@ usage: memdoor -p|--pid <target process id>
 
 `-e` or `--exename`: full absolute path of the target process executable file
 
-`-m` or `--memory-pressure-threshold`: process memory usage percentage ratio. the formula is `process_rss_usage / total_memory_usage * 100`. the valid range is from 1 to 99 integer only
-
 `-i` or `--interval`: second(s) between each process information collection
+
+`-m` or `--memory-pressure-threshold`: process memory usage percentage ratio. the formula is `process_rss_usage / total_memory_usage * 100`. the valid range is from 1 to 99 integer only. if this option is omitted, `memdoor` will still print the process information anyway
 
 `-c` or `--count`: number of cycles would be used for process information collection. `memdoor` will go to an infinite loop mode if this option is not used
 
@@ -117,4 +117,6 @@ ERROR: PID 18584 is not accessible: No such process
 [05/05/2024] 1.0.1 - bug issue#1 - low performance when dealing with a large number of network connections
 
 [06/01/2024] 1.1.0 - fearure issue#4 - add ipv6 connection information
+
+[06/14/2024] 1.2.0 - feature issue#6 - allow memdoor to dump output without specifying memory usage threshold
 ```

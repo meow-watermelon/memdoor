@@ -8,7 +8,7 @@
 #include "process.h"
 #include "utils.h"
 
-#define VERSION "1.1.0"
+#define VERSION "1.2.0"
 #define PROCESS_BASIC_INFO_BANNER "##### PROCESS BASIC INFORMATION #####"
 #define PROCESS_MEMORY_INFO_BANNER "##### PROCESS MEMORY INFORMATION #####"
 #define PROCESS_MEMORY_MAPPING_INFO_BANNER "##### PROCESS MEMORY MAPPING INFORMATION #####"
@@ -31,8 +31,8 @@ static void usage() {
         "memdoor version %s\n"
         "usage: memdoor -p|--pid <target process id>\n"
         "               -e|--exename <full path of target process>\n"
-        "               -m|--memory-pressure-threshold <percentage integer>\n"
         "               -i|--interval <second(s)>\n"
+        "               [-m|--memory-pressure-threshold <percentage integer>]\n"
         "               [-c|--count <count(s)>]\n", VERSION
     );
 }
@@ -84,13 +84,15 @@ int main(int argc, char *argv[]) {
                 opt_flag_e = 1;
                 break;
             case 'm':
-                memory_pressure_threshold = atoi(optarg);
-                if (memory_pressure_threshold <= 0 || memory_pressure_threshold >= 100) {
-                    fprintf(stderr, "ERROR: memory pressure threshold must be an integer and the range should be [1,99]\n\n");
-                    usage();
-                    exit(EXIT_FAILURE);
+                if (optarg != NULL) {
+                    memory_pressure_threshold = atoi(optarg);
+                    if (memory_pressure_threshold <= 0 || memory_pressure_threshold >= 100) {
+                        fprintf(stderr, "ERROR: memory pressure threshold must be an integer and the range should be [1,99]\n\n");
+                        usage();
+                        exit(EXIT_FAILURE);
+                    }
+                    opt_flag_m = 1;
                 }
-                opt_flag_m = 1;
                 break;
             case 'i':
                 interval = atoi(optarg);
@@ -126,7 +128,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* check if necessary options are specified */
-    if (!opt_flag_p || !opt_flag_e || !opt_flag_m || !opt_flag_i) {
+    if (!opt_flag_p || !opt_flag_e || !opt_flag_i) {
         usage();
         exit(EXIT_FAILURE);
     }
@@ -185,16 +187,18 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        if ((int)((float)memory_data.process_rss / (float)memory_data.total_memory * 100) < memory_pressure_threshold) {
-            fprintf(stdout, "Process memory usage is not equal to or greater than input memory pressure threshold\n\n");
-            fflush(stdout);
-            sleep(interval);
+        if (opt_flag_m == 1) {
+            if ((int)((float)memory_data.process_rss / (float)memory_data.total_memory * 100) < memory_pressure_threshold) {
+                fprintf(stdout, "Process memory usage is not equal to or greater than input memory pressure threshold\n\n");
+                fflush(stdout);
+                sleep(interval);
 
-            if (count > 0) {
-                --count;
+                if (count > 0) {
+                    --count;
+                }
+
+                continue;
             }
-
-            continue;
         }
 
         /* print process memory usage information */
