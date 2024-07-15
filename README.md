@@ -119,4 +119,6 @@ ERROR: PID 18584 is not accessible: No such process
 [06/01/2024] 1.1.0 - fearure issue#4 - add ipv6 connection information
 
 [06/14/2024] 1.2.0 - feature issue#6 - allow memdoor to dump output without specifying memory usage threshold
+
+[07/15/2024] 1.3.0 - feature issue#8 - convert all atoi and atol functions to strtol-family functions
 ```

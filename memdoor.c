@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <getopt.h>
 #include <limits.h>
 #include <stdio.h>
@@ -8,7 +9,7 @@
 #include "process.h"
 #include "utils.h"
 
-#define VERSION "1.2.0"
+#define VERSION "1.3.0"
 #define PROCESS_BASIC_INFO_BANNER "##### PROCESS BASIC INFORMATION #####"
 #define PROCESS_MEMORY_INFO_BANNER "##### PROCESS MEMORY INFORMATION #####"
 #define PROCESS_MEMORY_MAPPING_INFO_BANNER "##### PROCESS MEMORY MAPPING INFORMATION #####"
@@ -40,9 +41,9 @@ static void usage() {
 int main(int argc, char *argv[]) {
     pid_t pid;
     char exename[PATH_MAX];
-    int memory_pressure_threshold;
-    int interval;
-    int count = -1;
+    long int memory_pressure_threshold;
+    long int interval;
+    long int count = -1;
 
     struct meminfo memory_data;
 
@@ -71,7 +72,14 @@ int main(int argc, char *argv[]) {
 
         switch (c) {
             case 'p':
-                pid = atoi(optarg);
+                errno = 0;
+                pid = strtol(optarg, NULL, 10);
+
+                if (errno != 0) {
+                    fprintf(stderr, "ERROR: failed to covert process ID value\n\n");
+                    exit(EXIT_FAILURE);
+                }
+
                 if (pid <= 0) {
                     fprintf(stderr, "ERROR: process ID must be an integer and greater than 0\n\n");
                     usage();
@@ -85,7 +93,14 @@ int main(int argc, char *argv[]) {
                 break;
             case 'm':
                 if (optarg != NULL) {
-                    memory_pressure_threshold = atoi(optarg);
+                    errno = 0;
+                    memory_pressure_threshold = strtol(optarg, NULL, 10);
+
+                    if (errno != 0) {
+                        fprintf(stderr, "ERROR: failed to covert memory pressure threshold value\n\n");
+                        exit(EXIT_FAILURE);
+                    }
+
                     if (memory_pressure_threshold <= 0 || memory_pressure_threshold >= 100) {
                         fprintf(stderr, "ERROR: memory pressure threshold must be an integer and the range should be [1,99]\n\n");
                         usage();
@@ -95,7 +110,14 @@ int main(int argc, char *argv[]) {
                 }
                 break;
             case 'i':
-                interval = atoi(optarg);
+                errno = 0;
+                interval = strtol(optarg, NULL, 10);
+
+                if (errno != 0) {
+                    fprintf(stderr, "ERROR: failed to covert interval value\n\n");
+                    exit(EXIT_FAILURE);
+                }
+
                 if (interval <= 0) {
                     fprintf(stderr, "ERROR: interval must be an integer and greater than 0\n\n");
                     usage();
@@ -105,8 +127,15 @@ int main(int argc, char *argv[]) {
                 break;
             case 'c':
                 if (optarg != NULL) {
-                    count = atoi(optarg);
-                    if (count < 0) {
+                    errno = 0;
+                    count = strtol(optarg, NULL, 10);
+
+                    if (errno != 0) {
+                        fprintf(stderr, "ERROR: failed to covert count value\n\n");
+                        exit(EXIT_FAILURE);
+                    }
+
+                    if (count <= 0) {
                         fprintf(stderr, "ERROR: count must be an integer and greater than 0\n\n");
                         usage();
                         exit(EXIT_FAILURE);
