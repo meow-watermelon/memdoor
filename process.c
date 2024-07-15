@@ -137,7 +137,13 @@ int get_system_memory(struct meminfo *input_meminfo) {
             toggle_str = strchr(line, ':') + 1;
 
             /* covert the string to integer */
-            total_memory = atol(toggle_str);
+            errno = 0;
+            total_memory = strtol(toggle_str, NULL, 10);
+
+            if (errno != 0) {
+                fprintf(stderr, "ERROR: failed to convert MemTotal value\n");
+                total_memory = -1;
+            }
 
             break;
         }
@@ -185,7 +191,13 @@ int get_memory_usage(pid_t pid, struct meminfo *input_meminfo) {
             toggle_str = strchr(line, ':') + 1;
 
             /* covert the string to integer */
-            process_rss = atol(toggle_str);
+            errno = 0;
+            process_rss = strtol(toggle_str, NULL, 10);
+
+            if (errno != 0) {
+                fprintf(stderr, "ERROR: failed to convert Rss value\n");
+                process_rss = -1;
+            }
         }
 
         if (strstr(line, "Pss:") != NULL) {
@@ -193,7 +205,13 @@ int get_memory_usage(pid_t pid, struct meminfo *input_meminfo) {
             toggle_str = strchr(line, ':') + 1;
 
             /* covert the string to integer */
-            process_pss = atol(toggle_str);
+            errno = 0;
+            process_pss = strtol(toggle_str, NULL, 10);
+
+            if (errno != 0) {
+                fprintf(stderr, "ERROR: failed to convert Pss value\n");
+                process_pss = -1;
+            }
         }
 
         /* exit the loop once Pss and Rss are found */
