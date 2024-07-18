@@ -26,7 +26,7 @@ To clean up the compiled runtime files, please use `make clean` to clean up the 
 
 ```
 $ ./memdoor 
-memdoor version 1.2.0
+memdoor version 1.3.0
 usage: memdoor -p|--pid <target process id>
                -e|--exename <full path of target process>
                -i|--interval <second(s)>
