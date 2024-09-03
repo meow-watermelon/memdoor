@@ -10,6 +10,8 @@ When a Linux system encounters an Out-of-Memory (OOM) situation, it becomes chal
 
 * Process OOM score and OOM score adjustment value
 
+* Process tree information in reverse order
+
 * Process memory mappings
 
 * Process network connection information(IPv4 and IPv6 TCP + UDP)
@@ -26,7 +28,7 @@ To clean up the compiled runtime files, please use `make clean` to clean up the 
 
 ```
 $ ./memdoor 
-memdoor version 1.3.0
+memdoor version 1.4.0
 usage: memdoor -p|--pid <target process id>
                -e|--exename <full path of target process>
                -i|--interval <second(s)>
@@ -48,66 +50,76 @@ usage: memdoor -p|--pid <target process id>
 
 ## Example
 
-In this example, the program `oom` will keep allocating 1 MB memory in each iteration in an infinite loop and never free the memory region. The process ID is `18584`, the executable file full path is `/home/ericlee/oom`, the specified time period between each run is `1` second and the data collection is triggered when the process RSS memory usage is equal to or over `50%`. Because the program `oom` does not utilize any network resources so there's no network connection details.
+In this example, the program `oom` will keep allocating 1 MB memory in each iteration in an infinite loop and never free the memory region. The process ID is `20175`, the executable file full path is `/home/ericlee/oom`, the specified time period between each run is `1` second and the data collection is triggered when the process RSS memory usage is equal to or over `50%`. Because the program `oom` does not utilize any network resources so there's no network connection details.
 
-At `Sun May  5 15:52:02 2024`, the process `18584` has been killed so the sanity check for process ID and executable file full path is failed then `memdoor` exited.
+At `Mon Sep  2 21:28:47 2024`, the process `20175` has been killed so the sanity check for process ID and executable file full path is failed then `memdoor` exited.
 
 ```
-$ ./memdoor --pid 18584 --exename /home/ericlee/oom --interval 1 --memory-pressure-threshold 50
-Report Time: Sun May  5 15:51:02 2024
+$ ./memdoor --pid 20175 --exename /home/ericlee/oom --interval 1 --memory-pressure-threshold 50
+Report Time: Mon Sep  2 21:28:38 2024
 ##### PROCESS BASIC INFORMATION #####
-PID: 18584
+PID: 20175
 Executable Absolute Path: /home/ericlee/oom
 
 Process memory usage is not equal to or greater than input memory pressure threshold
 
 <... skip ...>
 
-Report Time: Sun May  5 15:52:02 2024
+Report Time: Mon Sep  2 21:28:44 2024
 ##### PROCESS BASIC INFORMATION #####
-PID: 18584
+PID: 20175
 Executable Absolute Path: /home/ericlee/oom
 
 ##### PROCESS MEMORY INFORMATION #####
-Total System Memory: 6790004 kB
-Process RSS Memory Usage: 3937320 kB
-Process PSS Memory Usage: 3937316 kB
-Process OOM Score: 1285
+Total System Memory: 6791036 kB
+Process RSS Memory Usage: 3705172 kB
+Process PSS Memory Usage: 3705168 kB
+Process OOM Score: 1251
 Process OOM Score Adjustment Value: 0
+
+##### PROCESS TREE INFORMATION #####
+20175 (oom) - OOM score: 1251 - OOM adjustment score: 0 - RSS: 3706188 kB - PSS: 3706184 kB
+9361 (bash) - OOM score: 666 - OOM adjustment score: 0 - RSS: 1896 kB - PSS: 1892 kB
+9359 (ld-linux-x86-64) - OOM score: 666 - OOM adjustment score: 0 - RSS: 1508 kB - PSS: 1504 kB
+535 (ld-linux-x86-64) - OOM score: 666 - OOM adjustment score: 0 - RSS: 4596 kB - PSS: 4454 kB
+176 (systemd) - OOM score: 666 - OOM adjustment score: 0 - RSS: 1984 kB - PSS: 1980 kB
+1 (systemd) - OOM score: 666 - OOM adjustment score: 0 - RSS: -1 kB - PSS: -1 kB
 
 ##### PROCESS MEMORY MAPPING INFORMATION #####
 START ADDRESS     SIZE                PERM  DEV    INODE        FILE PATH
-000055f7952d6000  4               kB  r--p  00:2e  330129       /home/ericlee/oom
-000055f7952d7000  4               kB  r-xp  00:2e  330129       /home/ericlee/oom
-000055f7952d8000  4               kB  r--p  00:2e  330129       /home/ericlee/oom
-000055f7952d9000  4               kB  r--p  00:2e  330129       /home/ericlee/oom
-000055f7952da000  4               kB  rw-p  00:2e  330129       /home/ericlee/oom
-000055f795a28000  1008056472      kB  rw-p  00:00  0            [heap]
-00007f80937c5000  67371008        kB  rw-p  00:00  0            
-00007f90a37c5000  136             kB  r--p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007f90a37e7000  1380            kB  r-xp  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007f90a3940000  316             kB  r--p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007f90a398f000  16              kB  r--p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007f90a3993000  8               kB  rw-p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
-00007f90a3995000  24              kB  rw-p  00:00  0            
-00007f90a39a5000  4               kB  r--p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007f90a39a6000  128             kB  r-xp  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007f90a39c6000  32              kB  r--p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007f90a39cf000  4               kB  r--p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007f90a39d0000  4               kB  rw-p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
-00007f90a39d1000  4               kB  rw-p  00:00  0            
-00007ffffc39d000  132             kB  rw-p  00:00  0            [stack]
-00007ffffc3ed000  16              kB  r--p  00:00  0            [vvar]
-00007ffffc3f1000  8               kB  r-xp  00:00  0            [vdso]
+000055cd5b47a000  4               kB  r--p  00:2e  330129       /home/ericlee/oom
+000055cd5b47b000  4               kB  r-xp  00:2e  330129       /home/ericlee/oom
+000055cd5b47c000  4               kB  r--p  00:2e  330129       /home/ericlee/oom
+000055cd5b47d000  4               kB  r--p  00:2e  330129       /home/ericlee/oom
+000055cd5b47e000  4               kB  rw-p  00:2e  330129       /home/ericlee/oom
+000055cd5d464000  948955412       kB  rw-p  00:00  0            [heap]
+00007f24b5fa6000  67371008        kB  rw-p  00:00  0            
+00007f34c5fa6000  136             kB  r--p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+00007f34c5fc8000  1380            kB  r-xp  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+00007f34c6121000  316             kB  r--p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+00007f34c6170000  16              kB  r--p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+00007f34c6174000  8               kB  rw-p  00:2e  332162       /usr/lib/x86_64-linux-gnu/libc-2.31.so
+00007f34c6176000  24              kB  rw-p  00:00  0            
+00007f34c6187000  4               kB  r--p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+00007f34c6188000  128             kB  r-xp  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+00007f34c61a8000  32              kB  r--p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+00007f34c61b1000  4               kB  r--p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+00007f34c61b2000  4               kB  rw-p  00:2e  332158       /usr/lib/x86_64-linux-gnu/ld-2.31.so
+00007f34c61b3000  4               kB  rw-p  00:00  0            
+00007ffd51a0e000  132             kB  rw-p  00:00  0            [stack]
+00007ffd51b05000  16              kB  r--p  00:00  0            [vvar]
+00007ffd51b09000  8               kB  r-xp  00:00  0            [vdso]
 ffffffffff600000  4               kB  --xp  00:00  0            [vsyscall]
 
 ##### PROCESS NETWORK CONNECTION INFORMATION #####
 PROT  STATE        L.ADDR                                       L.PORT  R.ADDR                                       R.PORT  TX QUEUE  RX QUEUE  
 
 
-Report Time: Sun May  5 15:52:04 2024
-ERROR: PID 18584 is not accessible: No such process
+Report Time: Mon Sep  2 21:28:47 2024
+ERROR: PID 20175 does not match the executable name /home/ericlee/oom
 ```
+
+Please note that RSS / PSS information in process tree is not retrievable sometime under normal user. In that case, the values of those items would be `-1`.
 
 ## ChangeLog
 
@@ -121,4 +133,6 @@ ERROR: PID 18584 is not accessible: No such process
 [06/14/2024] 1.2.0 - feature issue#6 - allow memdoor to dump output without specifying memory usage threshold
 
 [07/15/2024] 1.3.0 - feature issue#8 - convert all atoi and atol functions to strtol-family functions
+
+[09/02/2024] 1.4.0 - feature issue#10 - add process tree information
 ```

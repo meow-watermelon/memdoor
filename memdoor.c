@@ -9,9 +9,10 @@
 #include "process.h"
 #include "utils.h"
 
-#define VERSION "1.3.0"
+#define VERSION "1.4.0"
 #define PROCESS_BASIC_INFO_BANNER "##### PROCESS BASIC INFORMATION #####"
 #define PROCESS_MEMORY_INFO_BANNER "##### PROCESS MEMORY INFORMATION #####"
+#define PROCESS_TREE_INFO_BANNER "##### PROCESS TREE INFORMATION #####"
 #define PROCESS_MEMORY_MAPPING_INFO_BANNER "##### PROCESS MEMORY MAPPING INFORMATION #####"
 #define PROCESS_NETWORK_CONNECTION_INFO_BANNER "##### PROCESS NETWORK CONNECTION INFORMATION #####"
 
@@ -192,7 +193,7 @@ int main(int argc, char *argv[]) {
         fflush(stdout);
 
         /* check if process memory usage is equal or greater than input memory pressure threshold */
-        ret_get_system_memory = get_system_memory(&memory_data);
+        ret_get_system_memory = get_system_memory(&memory_data.total_memory);
         if (ret_get_system_memory < 0) {
             fprintf(stderr, "ERROR: failed to get system memory information\n\n");
             sleep(interval);
@@ -204,7 +205,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        ret_get_memory_usage = get_memory_usage(pid, &memory_data);
+        ret_get_memory_usage = get_memory_usage(pid, &memory_data.process_rss, &memory_data.process_pss);
         if (ret_get_memory_usage < 0) {
             fprintf(stderr, "ERROR: failed to get process memory usage information\n\n");
             sleep(interval);
@@ -239,7 +240,7 @@ int main(int argc, char *argv[]) {
         fprintf(stdout, "Process PSS Memory Usage: %ld kB\n", memory_data.process_pss);
         fflush(stdout);
 
-        ret_get_oom_score = get_oom_score(pid, &memory_data);
+        ret_get_oom_score = get_oom_score(pid, &memory_data.process_oom_score, &memory_data.process_oom_score_adj);
         if (ret_get_oom_score < 0) {
             fprintf(stderr, "WARNING: failed to get process OOM score\n");
         } else {
@@ -247,6 +248,15 @@ int main(int argc, char *argv[]) {
             fprintf(stdout, "Process OOM Score Adjustment Value: %d\n", memory_data.process_oom_score_adj);
             fflush(stdout);
         }
+
+        fprintf(stdout, "\n");
+        fflush(stdout);
+
+        /* print process tree information */
+        fprintf(stdout, "%s\n", PROCESS_TREE_INFO_BANNER);
+        fflush(stdout);
+
+        get_process_tree(pid);
 
         fprintf(stdout, "\n");
         fflush(stdout);

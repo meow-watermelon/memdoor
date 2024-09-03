@@ -23,32 +23,90 @@ int check_pid(pid_t pid) {
     }
 }
 
-int compare_pid_exe(pid_t pid, char *exe_name) {
-    char exe_name_path[PATH_MAX];
-    char exe_name_realpath[PATH_MAX];
+int get_ppid(pid_t pid, int *ppid, char *exe_name) {
+    FILE *pid_stat_file;
+    pid_stat_file = NULL;
+    char pid_stat_path[PATH_MAX];
+    char *stat_format = "%*d %s %*s %d";
 
     int ret_snprintf;
+    int ret_fscanf;
 
-    /* construct /proc/pid/exe file path name */
-    ret_snprintf = snprintf(exe_name_path, sizeof(exe_name_path), "/proc/%d/exe", pid);
+    /* construct /proc/pid/stat file path name */
+    ret_snprintf = snprintf(pid_stat_path, sizeof(pid_stat_path), "/proc/%d/stat", pid);
     if (ret_snprintf < 0) {
         return -1;
     }
 
+    /* get parent PID */
+    pid_stat_file = fopen(pid_stat_path, "r");
+    if (pid_stat_file == NULL) {
+        return -1;
+    }
+
+    ret_fscanf = fscanf(pid_stat_file, stat_format, exe_name, ppid);
+
+    if (ret_fscanf < 2 || ret_fscanf == EOF) {
+        fclose(pid_stat_file);
+        return -1;
+    }
+
+    fclose(pid_stat_file);
+
+    return 0;
+}
+
+char *get_exe_path_name(pid_t pid) {
+    int ret_snprintf;
+    char exe_name_path[PATH_MAX];
+    char *exe_name_realpath = (char *)malloc(PATH_MAX);
+
+    if (exe_name_realpath == NULL) {
+        return NULL;
+    }
+
+    /* construct /proc/pid/exe file path name */
+    ret_snprintf = snprintf(exe_name_path, sizeof(exe_name_path), "/proc/%d/exe", pid);
+    if (ret_snprintf < 0) {
+        goto handle_error;
+    }
+
     /* acquire real absolute path */
     if (realpath(exe_name_path, exe_name_realpath) == NULL) {
+        goto handle_error;
+    }
+
+    return exe_name_realpath;
+
+/* error handling routine */
+handle_error:
+    free(exe_name_realpath);
+    exe_name_realpath = NULL;
+    return NULL;
+}
+
+int compare_pid_exe(pid_t pid, char *exe_name) {
+    int ret_strcmp;
+    char *exe_name_realpath;
+    exe_name_realpath = get_exe_path_name(pid);
+
+    if (exe_name_realpath == NULL) {
         return -1;
     }
 
     /* compare executable absolute path and executable real path */
-    if (strcmp(exe_name, exe_name_realpath) == 0) {
+    ret_strcmp = strcmp(exe_name, exe_name_realpath);
+    free(exe_name_realpath);
+    exe_name_realpath = NULL;
+
+    if (ret_strcmp == 0) {
         return 0;
     } else {
         return -1;
     }
 }
 
-int get_oom_score(pid_t pid, struct meminfo *input_meminfo) {
+int get_oom_score(pid_t pid, int *oom_score, int *oom_score_adj) {
     FILE *oom_score_file;
     FILE *oom_score_adj_file;
     oom_score_file = NULL;
@@ -57,8 +115,9 @@ int get_oom_score(pid_t pid, struct meminfo *input_meminfo) {
     char oom_score_file_path[PATH_MAX];
     char oom_score_adj_file_path[PATH_MAX];
 
-    int oom_score;
-    int oom_score_adj;
+    /* set fail-safe values for oom_score and oom_score_adj*/
+    *oom_score = -1;
+    *oom_score_adj = -9999;
 
     int ret_snprintf;
 
@@ -79,11 +138,9 @@ int get_oom_score(pid_t pid, struct meminfo *input_meminfo) {
         goto handle_error;
     }
 
-    if (fscanf(oom_score_file, "%d", &oom_score) != 1) {
+    if (fscanf(oom_score_file, "%d", oom_score) != 1) {
         goto handle_error;
     }
-
-    input_meminfo->process_oom_score = oom_score;
 
     /* read oom_score_adj */
     oom_score_adj_file = fopen(oom_score_adj_file_path, "r");
@@ -91,11 +148,9 @@ int get_oom_score(pid_t pid, struct meminfo *input_meminfo) {
         goto handle_error;
     }
 
-    if (fscanf(oom_score_adj_file, "%d", &oom_score_adj) != 1) {
+    if (fscanf(oom_score_adj_file, "%d", oom_score_adj) != 1) {
         goto handle_error;
     }
-
-    input_meminfo->process_oom_score_adj = oom_score_adj;
 
     /* close file handles */
     fclose(oom_score_file);
@@ -116,14 +171,14 @@ handle_error:
     return -1;
 }
 
-int get_system_memory(struct meminfo *input_meminfo) {
+int get_system_memory(long int *total_memory) {
     char *system_meminfo_filename = "/proc/meminfo";
     FILE *system_meminfo_file;
     system_meminfo_file = NULL;
 
     char line[BUFSIZ];
     char *toggle_str;
-    long int total_memory = -1;
+    *total_memory = -1;
 
     system_meminfo_file = fopen(system_meminfo_filename, "r");
     if (system_meminfo_file == NULL) {
@@ -138,11 +193,10 @@ int get_system_memory(struct meminfo *input_meminfo) {
 
             /* covert the string to integer */
             errno = 0;
-            total_memory = strtol(toggle_str, NULL, 10);
+            *total_memory = strtol(toggle_str, NULL, 10);
 
             if (errno != 0) {
                 fprintf(stderr, "ERROR: failed to convert MemTotal value\n");
-                total_memory = -1;
             }
 
             break;
@@ -152,15 +206,14 @@ int get_system_memory(struct meminfo *input_meminfo) {
     fclose(system_meminfo_file);
 
     /* if total_memory is not equal to -1, that means we have acquired total memory value. otherwise, return -1 as error */
-    if (total_memory != -1) {
-        input_meminfo->total_memory = total_memory;
+    if (*total_memory != -1) {
         return 0;
     } else {
         return -1;
     }
 }
 
-int get_memory_usage(pid_t pid, struct meminfo *input_meminfo) {
+int get_memory_usage(pid_t pid, long int *process_rss, long int *process_pss) {
     FILE *process_smaps_rollup_file;
     process_smaps_rollup_file = NULL;
 
@@ -170,8 +223,8 @@ int get_memory_usage(pid_t pid, struct meminfo *input_meminfo) {
     char line[BUFSIZ];
     char *toggle_str;
 
-    long int process_rss = -1;
-    long int process_pss = -1;
+    *process_rss = -1;
+    *process_pss = -1;
 
     /* construct process smaps_rollup file path based on pid */
     ret_snprintf = snprintf(process_smaps_rollup_file_path, sizeof(process_smaps_rollup_file_path), "/proc/%d/smaps_rollup", pid);
@@ -192,11 +245,11 @@ int get_memory_usage(pid_t pid, struct meminfo *input_meminfo) {
 
             /* covert the string to integer */
             errno = 0;
-            process_rss = strtol(toggle_str, NULL, 10);
+            *process_rss = strtol(toggle_str, NULL, 10);
 
             if (errno != 0) {
                 fprintf(stderr, "ERROR: failed to convert Rss value\n");
-                process_rss = -1;
+                *process_rss = -1;
             }
         }
 
@@ -206,16 +259,16 @@ int get_memory_usage(pid_t pid, struct meminfo *input_meminfo) {
 
             /* covert the string to integer */
             errno = 0;
-            process_pss = strtol(toggle_str, NULL, 10);
+            *process_pss = strtol(toggle_str, NULL, 10);
 
             if (errno != 0) {
                 fprintf(stderr, "ERROR: failed to convert Pss value\n");
-                process_pss = -1;
+                *process_pss = -1;
             }
         }
 
         /* exit the loop once Pss and Rss are found */
-        if (process_rss != -1 && process_pss != -1) {
+        if (*process_rss != -1 && *process_pss != -1) {
             break;
         }
     }
@@ -223,12 +276,42 @@ int get_memory_usage(pid_t pid, struct meminfo *input_meminfo) {
     fclose(process_smaps_rollup_file);
 
     /* if neither of process_rss or process_pss is not equal to -1, that means we have acquired process rss / pss values. otherwise, return -1 as error */
-    if (process_rss != -1 && process_pss != -1) {
-        input_meminfo->process_rss = process_rss;
-        input_meminfo->process_pss = process_pss;
+    if (*process_rss != -1 && *process_pss != -1) {
         return 0;
     } else {
         return -1;
+    }
+}
+
+void get_process_tree(pid_t pid) {
+    pid_t ppid;
+    ppid = -1;
+
+    pid_t tmp_pid;
+    int oom_score;
+    int oom_score_adj;
+    long int process_rss;
+    long int process_pss;
+    char exe_name[BUFSIZ];
+
+    int ret_get_ppid;
+
+    tmp_pid = pid;
+
+    while (ppid != 0) {
+        ret_get_ppid = get_ppid(tmp_pid, &ppid, exe_name);
+        if (ret_get_ppid < 0) {
+            fprintf(stderr, "WARNING: failed to get parent PID of the PID %d\n", tmp_pid);
+            return;
+        }
+
+        get_oom_score(tmp_pid, &oom_score, &oom_score_adj);
+        get_memory_usage(tmp_pid, &process_rss, &process_pss);
+
+        /* print process tree in reverse order */
+        printf("%d %s - OOM score: %d - OOM adjustment score: %d - RSS: %ld kB - PSS: %ld kB\n", tmp_pid, exe_name, oom_score, oom_score_adj, process_rss, process_pss);
+
+        tmp_pid = ppid;
     }
 }
 
