@@ -9,7 +9,7 @@
 #include "process.h"
 #include "utils.h"
 
-#define VERSION "1.4.0"
+#define VERSION "1.5.0"
 #define PROCESS_BASIC_INFO_BANNER "##### PROCESS BASIC INFORMATION #####"
 #define PROCESS_MEMORY_INFO_BANNER "##### PROCESS MEMORY INFORMATION #####"
 #define PROCESS_TREE_INFO_BANNER "##### PROCESS TREE INFORMATION #####"
@@ -205,7 +205,7 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
-        ret_get_memory_usage = get_memory_usage(pid, &memory_data.process_rss, &memory_data.process_pss);
+        ret_get_memory_usage = get_memory_usage(pid, &memory_data.process_rss, &memory_data.process_pss, &memory_data.process_uss);
         if (ret_get_memory_usage < 0) {
             fprintf(stderr, "ERROR: failed to get process memory usage information\n\n");
             sleep(interval);
@@ -238,6 +238,7 @@ int main(int argc, char *argv[]) {
         fprintf(stdout, "Total System Memory: %ld kB\n", memory_data.total_memory);
         fprintf(stdout, "Process RSS Memory Usage: %ld kB\n", memory_data.process_rss);
         fprintf(stdout, "Process PSS Memory Usage: %ld kB\n", memory_data.process_pss);
+        fprintf(stdout, "Process USS Memory Usage: %ld kB\n", memory_data.process_uss);
         fflush(stdout);
 
         ret_get_oom_score = get_oom_score(pid, &memory_data.process_oom_score, &memory_data.process_oom_score_adj);
