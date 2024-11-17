@@ -213,7 +213,7 @@ int get_system_memory(long int *total_memory) {
     }
 }
 
-int get_memory_usage(pid_t pid, long int *process_rss, long int *process_pss) {
+int get_memory_usage(pid_t pid, long int *process_rss, long int *process_pss, long int *process_uss) {
     FILE *process_smaps_rollup_file;
     process_smaps_rollup_file = NULL;
 
@@ -223,8 +223,15 @@ int get_memory_usage(pid_t pid, long int *process_rss, long int *process_pss) {
     char line[BUFSIZ];
     char *toggle_str;
 
+    int success_flag = 0;
+
+    /* USS = Private_Clean + Private_Dirty */
+    long int uss_private_clean = -1;
+    long int uss_private_dirty = -1;
+
     *process_rss = -1;
     *process_pss = -1;
+    *process_uss = -1;
 
     /* construct process smaps_rollup file path based on pid */
     ret_snprintf = snprintf(process_smaps_rollup_file_path, sizeof(process_smaps_rollup_file_path), "/proc/%d/smaps_rollup", pid);
@@ -237,7 +244,7 @@ int get_memory_usage(pid_t pid, long int *process_rss, long int *process_pss) {
         return -1;
     }
 
-    /* locate Rss / Pss string in /proc/pid/smaps_rollup file */
+    /* locate Rss / Pss / Uss string in /proc/pid/smaps_rollup file */
     while (fgets(line, sizeof(line), process_smaps_rollup_file) != NULL) {
         if (strstr(line, "Rss:") != NULL) {
             /* skip ':' char */
@@ -267,16 +274,50 @@ int get_memory_usage(pid_t pid, long int *process_rss, long int *process_pss) {
             }
         }
 
-        /* exit the loop once Pss and Rss are found */
-        if (*process_rss != -1 && *process_pss != -1) {
+        if (strstr(line, "Private_Clean:") != NULL) {
+            /* skip ':' char */
+            toggle_str = strchr(line, ':') + 1;
+
+            /* covert the string to integer */
+            errno = 0;
+            uss_private_clean = strtol(toggle_str, NULL, 10);
+
+            if (errno != 0) {
+                fprintf(stderr, "ERROR: failed to convert Private_Clean value\n");
+                uss_private_clean = -1;
+            }
+        }
+
+        if (strstr(line, "Private_Dirty:") != NULL) {
+            /* skip ':' char */
+            toggle_str = strchr(line, ':') + 1;
+
+            /* covert the string to integer */
+            errno = 0;
+            uss_private_dirty = strtol(toggle_str, NULL, 10);
+
+            if (errno != 0) {
+                fprintf(stderr, "ERROR: failed to convert Private_Dirty value\n");
+                uss_private_dirty = -1;
+            }
+        }
+
+        /* calculate uss */
+        if (uss_private_clean != -1 && uss_private_dirty != -1) {
+            *process_uss = uss_private_clean + uss_private_dirty;
+        }
+
+        /* exit the loop once Pss, Rss, Private_Clean and Private_Dirty are found */
+        if (*process_rss != -1 && *process_pss != -1 && uss_private_clean != -1 && uss_private_dirty != -1) {
+            success_flag = 1;
             break;
         }
     }
 
     fclose(process_smaps_rollup_file);
 
-    /* if neither of process_rss or process_pss is not equal to -1, that means we have acquired process rss / pss values. otherwise, return -1 as error */
-    if (*process_rss != -1 && *process_pss != -1) {
+    /* if neither of process_rss, process_pss and process_uss is not equal to -1, that means we have acquired process rss, pss and uss values. otherwise, return -1 as error */
+    if (success_flag == 1) {
         return 0;
     } else {
         return -1;
@@ -292,6 +333,7 @@ void get_process_tree(pid_t pid) {
     int oom_score_adj;
     long int process_rss;
     long int process_pss;
+    long int process_uss;
     char exe_name[BUFSIZ];
 
     int ret_get_ppid;
@@ -306,10 +348,10 @@ void get_process_tree(pid_t pid) {
         }
 
         get_oom_score(tmp_pid, &oom_score, &oom_score_adj);
-        get_memory_usage(tmp_pid, &process_rss, &process_pss);
+        get_memory_usage(tmp_pid, &process_rss, &process_pss, &process_uss);
 
         /* print process tree in reverse order */
-        printf("%d %s - OOM score: %d - OOM adjustment score: %d - RSS: %ld kB - PSS: %ld kB\n", tmp_pid, exe_name, oom_score, oom_score_adj, process_rss, process_pss);
+        printf("%d %s - OOM score: %d - OOM adjustment score: %d - RSS: %ld kB - PSS: %ld kB - USS: %ld kB\n", tmp_pid, exe_name, oom_score, oom_score_adj, process_rss, process_pss, process_uss);
 
         tmp_pid = ppid;
     }
