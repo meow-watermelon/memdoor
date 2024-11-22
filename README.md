@@ -28,7 +28,7 @@ To clean up the compiled runtime files, please use `make clean` to clean up the 
 
 ```
 $ ./memdoor 
-memdoor version 1.5.0
+memdoor version 1.5.1
 usage: memdoor -p|--pid <target process id>
                -e|--exename <full path of target process>
                -i|--interval <second(s)>
@@ -138,4 +138,6 @@ Please note that RSS, PSS and USS information in process tree is not retrievable
 [09/02/2024] 1.4.0 - feature issue#10 - add process tree information
 
 [11/17/2024] 1.5.0 - feature issue#12 - add uss memory usage information
+
+[11/21/2024] 1.5.1 - bug issue#16 - optimize uss value calculation
 ```

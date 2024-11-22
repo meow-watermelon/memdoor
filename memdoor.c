@@ -9,7 +9,7 @@
 #include "process.h"
 #include "utils.h"
 
-#define VERSION "1.5.0"
+#define VERSION "1.5.1"
 #define PROCESS_BASIC_INFO_BANNER "##### PROCESS BASIC INFORMATION #####"
 #define PROCESS_MEMORY_INFO_BANNER "##### PROCESS MEMORY INFORMATION #####"
 #define PROCESS_TREE_INFO_BANNER "##### PROCESS TREE INFORMATION #####"

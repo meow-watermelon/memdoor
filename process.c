@@ -244,7 +244,7 @@ int get_memory_usage(pid_t pid, long int *process_rss, long int *process_pss, lo
         return -1;
     }
 
-    /* locate Rss / Pss / Uss string in /proc/pid/smaps_rollup file */
+    /* locate Rss / Pss / Private_* string in /proc/pid/smaps_rollup file */
     while (fgets(line, sizeof(line), process_smaps_rollup_file) != NULL) {
         if (strstr(line, "Rss:") != NULL) {
             /* skip ':' char */
@@ -302,11 +302,6 @@ int get_memory_usage(pid_t pid, long int *process_rss, long int *process_pss, lo
             }
         }
 
-        /* calculate uss */
-        if (uss_private_clean != -1 && uss_private_dirty != -1) {
-            *process_uss = uss_private_clean + uss_private_dirty;
-        }
-
         /* exit the loop once Pss, Rss, Private_Clean and Private_Dirty are found */
         if (*process_rss != -1 && *process_pss != -1 && uss_private_clean != -1 && uss_private_dirty != -1) {
             success_flag = 1;
@@ -318,6 +313,9 @@ int get_memory_usage(pid_t pid, long int *process_rss, long int *process_pss, lo
 
     /* if neither of process_rss, process_pss and process_uss is not equal to -1, that means we have acquired process rss, pss and uss values. otherwise, return -1 as error */
     if (success_flag == 1) {
+        /* calculate uss */
+        *process_uss = uss_private_clean + uss_private_dirty;
+
         return 0;
     } else {
         return -1;
