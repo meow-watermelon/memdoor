@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 
@@ -19,6 +20,9 @@ int main() {
             fprintf(stdout, "allocated %d MB memory\n", c);
             break;
         }
+
+        // set the allocated memory to 0
+        memset(p, 0, alloc_size);
 
         ++c;
     }
