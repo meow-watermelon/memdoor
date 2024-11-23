@@ -9,7 +9,7 @@
 #include "process.h"
 #include "utils.h"
 
-#define VERSION "1.5.1"
+#define VERSION "1.6.0"
 #define PROCESS_BASIC_INFO_BANNER "##### PROCESS BASIC INFORMATION #####"
 #define PROCESS_MEMORY_INFO_BANNER "##### PROCESS MEMORY INFORMATION #####"
 #define PROCESS_TREE_INFO_BANNER "##### PROCESS TREE INFORMATION #####"
@@ -52,6 +52,7 @@ int main(int argc, char *argv[]) {
     int ret_compare_pid_exe;
     int ret_get_system_memory;
     int ret_get_memory_usage;
+    int ret_get_page_tables_usage;
     int ret_get_oom_score;
 
     /* suppress default getopt error messages */
@@ -205,9 +206,23 @@ int main(int argc, char *argv[]) {
             continue;
         }
 
+        /* get process memory usage */
         ret_get_memory_usage = get_memory_usage(pid, &memory_data.process_rss, &memory_data.process_pss, &memory_data.process_uss);
         if (ret_get_memory_usage < 0) {
             fprintf(stderr, "ERROR: failed to get process memory usage information\n\n");
+            sleep(interval);
+
+            if (count > 0) {
+                --count;
+            }
+
+            continue;
+        }
+
+        /* get process page tables usage */
+        ret_get_page_tables_usage = get_page_tables_usage(pid, &memory_data.process_page_tables_size);
+        if (ret_get_page_tables_usage < 0) {
+            fprintf(stderr, "ERROR: failed to get process page tables usage information\n\n");
             sleep(interval);
 
             if (count > 0) {
@@ -231,7 +246,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        /* print process memory usage information */
+        /* print process memory and page tables usage information */
         fprintf(stdout, "%s\n", PROCESS_MEMORY_INFO_BANNER);
         fflush(stdout);
 
@@ -239,6 +254,7 @@ int main(int argc, char *argv[]) {
         fprintf(stdout, "Process RSS Memory Usage: %ld kB\n", memory_data.process_rss);
         fprintf(stdout, "Process PSS Memory Usage: %ld kB\n", memory_data.process_pss);
         fprintf(stdout, "Process USS Memory Usage: %ld kB\n", memory_data.process_uss);
+        fprintf(stdout, "Process Page Tables Usage: %ld kB\n", memory_data.process_page_tables_size);
         fflush(stdout);
 
         ret_get_oom_score = get_oom_score(pid, &memory_data.process_oom_score, &memory_data.process_oom_score_adj);

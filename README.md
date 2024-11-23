@@ -8,6 +8,8 @@ When a Linux system encounters an Out-of-Memory (OOM) situation, it becomes chal
 
 * Process RSS, PSS and USS memory usage
 
+* Process page tables usage
+
 * Process OOM score and OOM score adjustment value
 
 * Process tree information in reverse order
@@ -28,7 +30,7 @@ To clean up the compiled runtime files, please use `make clean` to clean up the 
 
 ```
 $ ./memdoor 
-memdoor version 1.5.1
+memdoor version 1.6.0
 usage: memdoor -p|--pid <target process id>
                -e|--exename <full path of target process>
                -i|--interval <second(s)>
@@ -75,6 +77,7 @@ Total System Memory: 6786948 kB
 Process RSS Memory Usage: 4305572 kB
 Process PSS Memory Usage: 4305517 kB
 Process USS Memory Usage: 4305488 kB
+Process Page Tables Usage: 2016460 kB
 Process OOM Score: 1301
 Process OOM Score Adjustment Value: 0
 
@@ -140,4 +143,6 @@ Please note that RSS, PSS and USS information in process tree is not retrievable
 [11/17/2024] 1.5.0 - feature issue#12 - add uss memory usage information
 
 [11/21/2024] 1.5.1 - bug issue#16 - optimize uss value calculation
+
+[11/22/2024] 1.6.0 - feature issue#15 - add page tables usage information
 ```
