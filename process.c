@@ -322,6 +322,58 @@ int get_memory_usage(pid_t pid, long int *process_rss, long int *process_pss, lo
     }
 }
 
+int get_page_tables_usage(pid_t pid, long int *process_page_tables_size) {
+    FILE *process_status_file;
+    process_status_file = NULL;
+
+    char process_status_file_path[PATH_MAX];
+    int ret_snprintf;
+
+    char line[BUFSIZ];
+    char *toggle_str;
+
+    *process_page_tables_size = -1;
+
+    /* construct process status file path based on pid */
+    ret_snprintf = snprintf(process_status_file_path, sizeof(process_status_file_path), "/proc/%d/status", pid);
+    if (ret_snprintf < 0) {
+        return -1;
+    }
+
+    process_status_file = fopen(process_status_file_path, "r");
+    if (process_status_file == NULL) {
+        return -1;
+    }
+
+    /* locate VmPTE string in /proc/pid/status file */
+    while (fgets(line, sizeof(line), process_status_file) != NULL) {
+        if (strstr(line, "VmPTE:") != NULL) {
+            /* skip ':' char */
+            toggle_str = strchr(line, ':') + 1;
+
+            /* covert the string to integer */
+            errno = 0;
+            *process_page_tables_size = strtol(toggle_str, NULL, 10);
+
+            if (errno != 0) {
+                fprintf(stderr, "ERROR: failed to convert VmPTE value\n");
+                *process_page_tables_size = -1;
+            }
+
+            break;
+        }
+    }
+
+    fclose(process_status_file);
+
+    /* if process_page_tables_size is not equal to -1, that means we have acquired page tables size value. otherwise, return -1 as error */
+    if (*process_page_tables_size != -1) {
+        return 0;
+    } else {
+        return -1;
+    }
+}
+
 void get_process_tree(pid_t pid) {
     pid_t ppid;
     ppid = -1;
