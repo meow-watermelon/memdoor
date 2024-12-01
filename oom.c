@@ -21,8 +21,8 @@ int main() {
             break;
         }
 
-        // set the allocated memory to 0
-        memset(p, 0, alloc_size);
+        // set the allocated memory to character A
+        memset(p, 'A', alloc_size);
 
         ++c;
     }
