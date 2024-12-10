@@ -1,31 +1,45 @@
 #include <errno.h>
 #include <getopt.h>
 #include <limits.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/mman.h>
 #include <sys/types.h>
 #include <string.h>
 #include <unistd.h>
 #include "process.h"
 #include "utils.h"
 
-#define VERSION "1.6.0"
+#define VERSION "1.7.0"
 #define PROCESS_BASIC_INFO_BANNER "##### PROCESS BASIC INFORMATION #####"
 #define PROCESS_MEMORY_INFO_BANNER "##### PROCESS MEMORY INFORMATION #####"
 #define PROCESS_TREE_INFO_BANNER "##### PROCESS TREE INFORMATION #####"
 #define PROCESS_MEMORY_MAPPING_INFO_BANNER "##### PROCESS MEMORY MAPPING INFORMATION #####"
 #define PROCESS_NETWORK_CONNECTION_INFO_BANNER "##### PROCESS NETWORK CONNECTION INFORMATION #####"
 
+/* command options flags */
+static int opt_flag_p = 0;
+static int opt_flag_e = 0;
+static int opt_flag_m = 0;
+static int opt_flag_i = 0;
+static int opt_flag_l = 0;
+
 /* define command-line options */
-char *short_opts = "p:e:m:i:c:";
+static char *short_opts = "p:e:m:i:c:l";
 struct option long_opts[] = {
     {"pid", required_argument, NULL, 'p'},
     {"exename", required_argument, NULL, 'e'},
     {"memory-pressure-threshold", required_argument, NULL, 'm'},
     {"interval", required_argument, NULL, 'i'},
     {"count", required_argument, NULL, 'c'},
+    {"lock-memory", no_argument, NULL, 'l'},
     {NULL, 0, NULL, 0}
 };
+
+/* define mlockall / munlockall return values vatiables */
+static int ret_mlockall;
+static int ret_munlockall;
 
 /* define usage function */
 static void usage() {
@@ -35,8 +49,29 @@ static void usage() {
         "               -e|--exename <full path of target process>\n"
         "               -i|--interval <second(s)>\n"
         "               [-m|--memory-pressure-threshold <percentage integer>]\n"
-        "               [-c|--count <count(s)>]\n", VERSION
+        "               [-c|--count <count(s)>]\n"
+        "               [-l|--lock-memory]\n", VERSION
     );
+}
+
+/* define unlock memory function */
+static void unlock_memory() {
+    /* if --lock-memory option is specified, then unlock memory region */
+    if (opt_flag_l > 0) {
+        ret_munlockall = munlockall();
+        if (ret_munlockall < 0) {
+            fprintf(stderr, "ERROR: failed to unlock memory region: %s\n", strerror(errno));
+        }
+    }
+}
+
+/* define a signal handler to handle SIGINT */
+static int sigint_flag = 0;
+static void sigint_handler(int signo) {
+    /* suppress "unused parameter" warning  */
+    (void)signo;
+
+    sigint_flag = 1;
 }
 
 int main(int argc, char *argv[]) {
@@ -60,13 +95,8 @@ int main(int argc, char *argv[]) {
 
     int c;
 
-    int opt_flag_p = 0;
-    int opt_flag_e = 0;
-    int opt_flag_m = 0;
-    int opt_flag_i = 0;
-
     while (1) {
-        c = getopt_long (argc, argv, short_opts, long_opts, NULL);
+        c = getopt_long(argc, argv, short_opts, long_opts, NULL);
 
         if (c == -1) {
             break;
@@ -78,7 +108,7 @@ int main(int argc, char *argv[]) {
                 pid = strtol(optarg, NULL, 10);
 
                 if (errno != 0) {
-                    fprintf(stderr, "ERROR: failed to covert process ID value\n\n");
+                    fprintf(stderr, "ERROR: failed to convert process ID value\n\n");
                     exit(EXIT_FAILURE);
                 }
 
@@ -147,6 +177,9 @@ int main(int argc, char *argv[]) {
                     count = -1;
                 }
                 break;
+            case 'l':
+                opt_flag_l = 1;
+                break;
             case '?':
                 fprintf(stderr, "ERROR: Unknown option\n\n");
                 usage();
@@ -164,7 +197,32 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    /* check if lock memory option is specified, if yes then triggering mlockall() */
+    if (opt_flag_l) {
+        ret_mlockall = mlockall(MCL_CURRENT | MCL_FUTURE);
+        if (ret_mlockall < 0) {
+            fprintf(stderr, "ERROR: failed to lock memory region: %s\n", strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    /* install SIGINT signal handler */
+    if (signal(SIGINT, sigint_handler) == SIG_ERR) {
+        fprintf(stderr, "ERROR: failed to register SIGINT signal handler\n");
+
+        unlock_memory();
+
+        exit(EXIT_FAILURE);
+    }
+
     while (1) {
+        /* exit the loop once SIGINT is captured */
+        if (sigint_flag == 1) {
+            printf("\nSIGINT received, exiting...\n");
+
+            break;
+        }
+
         /* exit the loop once count becomes 0 */
         if (count == 0) {
             break;
@@ -304,6 +362,8 @@ int main(int argc, char *argv[]) {
             --count;
         }
     }
+
+    unlock_memory();
 
     exit(EXIT_SUCCESS);
 }

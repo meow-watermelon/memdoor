@@ -30,12 +30,13 @@ To clean up the compiled runtime files, please use `make clean` to clean up the 
 
 ```
 $ ./memdoor 
-memdoor version 1.6.0
+memdoor version 1.7.0
 usage: memdoor -p|--pid <target process id>
                -e|--exename <full path of target process>
                -i|--interval <second(s)>
                [-m|--memory-pressure-threshold <percentage integer>]
                [-c|--count <count(s)>]
+               [-l|--lock-memory]
 ```
 
 `-p` or `--pid`: the target process ID
@@ -47,6 +48,8 @@ usage: memdoor -p|--pid <target process id>
 `-m` or `--memory-pressure-threshold`: process memory usage percentage ratio. the formula is `process_rss_usage / total_memory_usage * 100`. the valid range is from 1 to 99 integer only. if this option is omitted, `memdoor` will still print the process information anyway
 
 `-c` or `--count`: number of cycles would be used for process information collection. `memdoor` will go to an infinite loop mode if this option is not used
+
+`-l` or `--lock-memory`: an option to enable the memory locking feature, preventing `memdoor`'s memory from being swapped out. Please note that enabling this feature may introduce additional overhead
 
 `memdoor` will quit or stop running if it detects the command path of the target process ID does not match the full absolute path of the target process executable file. This will ensure `memdoor` is always tracking the correct process ID.
 
@@ -145,4 +148,6 @@ Please note that RSS, PSS and USS information in process tree is not retrievable
 [11/21/2024] 1.5.1 - bug issue#16 - optimize uss value calculation
 
 [11/22/2024] 1.6.0 - feature issue#15 - add page tables usage information
+
+[12/07/2024] 1.7.0 - feature issue#19 - add an option to enable memory locking
 ```
