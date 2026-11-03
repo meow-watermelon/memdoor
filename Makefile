@@ -1,5 +1,6 @@
 CC = gcc
-CFLAGS = -g -Wall -Wextra -Wpedantic
+CFLAGS   := -g -Wall -Wextra -Wpedantic -Wconversion -Wdouble-promotion \
+            -Wunused -Wshadow -Wsign-conversion -fsanitize=undefined
 INCLUDES = -I.
 SRCS = memdoor.c process.c network.c utils.c
 OBJS = $(SRCS:.c=.o)

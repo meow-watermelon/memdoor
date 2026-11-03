@@ -1,3 +1,7 @@
+#ifndef __linux__
+#error "ERROR: memdoor can be only running on Linux operating system"
+#endif
+
 #include <errno.h>
 #include <getopt.h>
 #include <limits.h>
@@ -11,7 +15,7 @@
 #include "process.h"
 #include "utils.h"
 
-#define VERSION "1.7.0"
+#define VERSION "1.8.0"
 #define PROCESS_BASIC_INFO_BANNER "##### PROCESS BASIC INFORMATION #####"
 #define PROCESS_MEMORY_INFO_BANNER "##### PROCESS MEMORY INFORMATION #####"
 #define PROCESS_TREE_INFO_BANNER "##### PROCESS TREE INFORMATION #####"
@@ -78,7 +82,7 @@ int main(int argc, char *argv[]) {
     pid_t pid;
     char exename[PATH_MAX];
     long int memory_pressure_threshold;
-    long int interval;
+    unsigned int interval;
     long int count = -1;
 
     struct meminfo memory_data;
@@ -105,7 +109,7 @@ int main(int argc, char *argv[]) {
         switch (c) {
             case 'p':
                 errno = 0;
-                pid = strtol(optarg, NULL, 10);
+                pid = (int)strtol(optarg, NULL, 10);
 
                 if (errno != 0) {
                     fprintf(stderr, "ERROR: failed to convert process ID value\n\n");
@@ -143,7 +147,7 @@ int main(int argc, char *argv[]) {
                 break;
             case 'i':
                 errno = 0;
-                interval = strtol(optarg, NULL, 10);
+                interval = (unsigned int)strtol(optarg, NULL, 10);
 
                 if (errno != 0) {
                     fprintf(stderr, "ERROR: failed to covert interval value\n\n");
