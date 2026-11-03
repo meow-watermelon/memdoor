@@ -488,7 +488,7 @@ void get_network_connection(pid_t pid) {
     char fd_file_symlink_path[PATH_MAX];
     char fd_file_path[PATH_MAX];
 
-    long int ret_readlink;
+    ssize_t ret_readlink;
     int ret_snprintf;
     int ret_sscanf;
 
